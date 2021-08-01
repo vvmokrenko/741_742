@@ -893,10 +893,10 @@ td:first-child {
 	padding-left: 98px;
 	padding-right: 98px;
 	margin-top: 98px;
-	height: 651px; 
+	height: 451px; 
 }
 .details-slider {
-	width: 570px;
+	width: 340px;
 	float: left;
 	margin-right: 30px;
 }
@@ -931,7 +931,7 @@ td:first-child {
 }
 
 .description {
-	width: 535px;
+	width: 340px;
 	float: right;
 	padding-left: 35px
 }
@@ -973,7 +973,7 @@ td:first-child {
 .red-button {
 	display: block;
 	height: 71px;
-	width: 510px;
+	width: 310px;
 	border-radius: 35px;
 	background-color: #f44336;
 	text-align: center;
@@ -1012,17 +1012,17 @@ td:first-child {
 	padding: 0px 98px;
 }
 .related .title {
-	height: 343px;
+	height: 143px;
 	margin-right: 0;
 }
 .related .title h2 {
-	margin-top: 245px;
+	# margin-top: 245px;
 }
 .related .title .explore {
 	margin-top: 262px;
 }
 .related-products {
-	margin-bottom: 120px;
+	#  margin-bottom: 120px;
 }
 .related-products .block a img {
 	float: left;
