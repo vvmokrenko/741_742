@@ -1,24 +1,55 @@
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 
 from authapp.forms import ShopUserRegisterForm, ShopUserEditForm
 from authapp.models import ShopUser
 from mainapp.models import ProductCategory, Product
 from django.contrib.auth.decorators import user_passes_test
 from adminapp.forms import ProductEditForm, ProductCategoryEditForm
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-def users(request):
+
+def users(request, page=1):
     title = 'админка/пользователи'
 
     users_list = ShopUser.objects.all().order_by('-is_active', '-is_superuser', '-is_staff', 'username')
 
+    paginator = Paginator(users_list, 2)
+    try:
+        users_paginator = paginator.page(page)
+    except PageNotAnInteger:
+        users_paginator = paginator.page(1)
+    except EmptyPage:
+        users_paginator = paginator.page(paginator.num_pages)
+
+
     context = {
         'title': title,
-        'objects': users_list
+        'objects': users_paginator # users_list
     }
 
     return render(request, 'adminapp/users.html', context)
+
+
+class UserListView(LoginRequiredMixin, ListView):
+    model = ShopUser
+    template_name = 'adminapp/users.html'
+    context_object_name = 'objects'
+
+    def get_queryset(self):
+        return ShopUser.objects.all().order_by('-is_active', '-is_superuser', '-is_staff', 'username')
+
+    def get_context_data(self):
+        context = super(UserListView, self).get_context_data()
+        title = 'админка/пользователи'
+        context.update({'title': title})
+
+        return context
+
+
 
 
 def user_create(request):
@@ -39,6 +70,22 @@ def user_create(request):
     }
 
     return render(request, 'adminapp/user_update.html', context)
+
+
+class UserCreateView(LoginRequiredMixin, CreateView):
+    model = ShopUser
+    template_name = 'adminapp/user_update.html'
+    form_class = ShopUserRegisterForm
+    success_url = reverse_lazy('admin_staff:users')
+
+    def get_context_data(self):
+        context = super(UserCreateView, self).get_context_data()
+        title = 'пользователи/создание'
+        context.update({'title': title})
+
+        return context
+
+
 
 
 def user_update(request, pk):
@@ -74,17 +121,39 @@ def user_delete(request, pk):
 
 
 @user_passes_test(lambda u: u.is_superuser)
-def categories(request):
+def categories(request, page=1):
     title = 'админка/категории'
 
     categories_list = ProductCategory.objects.all()
 
+    paginator = Paginator(categories_list, 2)
+    try:
+        categories_paginator = paginator.page(page)
+    except PageNotAnInteger:
+        categories_paginator = paginator.page(1)
+    except EmptyPage:
+        categories_paginator = paginator.page(paginator.num_pages)
+
     content = {
         'title': title,
-        'objects': categories_list
+        'objects': categories_paginator # categories_list
     }
 
     return render(request, 'adminapp/categories.html', content)
+
+
+
+class ProductCategoryListView(LoginRequiredMixin, ListView):
+    model = ProductCategory
+    template_name = 'adminapp/categories.html'
+    context_object_name = 'objects'
+
+    def get_context_data(self):
+        context = super(ProductCategoryListView, self).get_context_data()
+        title = 'админка/категории'
+        context.update({'title': title})
+
+        return context
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -104,6 +173,20 @@ def category_create(request):
                }
 
     return render(request, 'adminapp/category_update.html', content)
+
+class ProductCategoryCreateView(LoginRequiredMixin, CreateView):
+    model = ProductCategory
+    template_name = 'adminapp/category_update.html'
+    form_class = ProductCategoryEditForm
+    success_url = reverse_lazy('admin_staff:categories')
+    #  fields = '__all__'
+
+    def get_context_data(self):
+        context = super(ProductCategoryCreateView, self).get_context_data()
+        title = 'категория/создание'
+        context.update({'title': title})
+
+        return context
 
 
 def category_update(request, pk):
@@ -125,6 +208,19 @@ def category_update(request, pk):
     return render(request, 'adminapp/category_update.html', content)
 
 
+class ProductCategoryUpdateView(UpdateView):
+    model = ProductCategory
+    template_name = 'adminapp/category_update.html'
+    success_url = reverse_lazy('admin_staff:categories')
+    fields = '__all__'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'категории/редактирование'
+
+        return context
+
+
 def category_delete(request, pk):
     title = 'категории/удаление'
 
@@ -139,17 +235,42 @@ def category_delete(request, pk):
     return HttpResponseRedirect(reverse('admin_staff:categories'))
 
 
+class ProductCategoryDeleteView(DeleteView):
+    model = ProductCategory
+    success_url = reverse_lazy('admin_staff:categories')
+
+    # переопределяем метод, чтобы не запрашивалась форма подтверждения удаления
+    def get(self, *args, **kwargs):
+        return self.post(*args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.is_active = False
+        self.object.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+
 @user_passes_test(lambda u: u.is_superuser)
-def products(request, pk):
+def products(request, pk, page=1):
     title = 'админка/продукт'
 
     category = get_object_or_404(ProductCategory, pk=pk)
     products_list = Product.objects.filter(category__pk=pk).order_by('name')
 
+    paginator = Paginator(products_list, 2)
+    try:
+        products_paginator = paginator.page(page)
+    except PageNotAnInteger:
+        products_paginator = paginator.page(1)
+    except EmptyPage:
+        products_paginator = paginator.page(paginator.num_pages)
+
+
     context = {
         'title': title,
         'category': category,
-        'objects': products_list,
+        'objects': products_paginator #products_list,
     }
 
     return render(request, 'adminapp/products.html', context)
@@ -162,6 +283,15 @@ def product_read(request, pk):
     content = {'title': title, 'object': product, }
 
     return render(request, 'adminapp/product_read.html', content)
+
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = 'adminapp/product_read.html'
+
+    def get(self, request, *args, **kwargs):
+        print(request)
+
 
 @user_passes_test(lambda u: u.is_superuser)
 def product_create(request, pk):
