@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from mainapp.views import get_basket
 
 
 def index(request):
@@ -8,7 +7,6 @@ def index(request):
     context = {
         'title': title,
         'slogan': 'супер предложения',
-        'basket': get_basket(request.user),
     }
 
     return render(request, 'geekshop/index.html', context)
@@ -26,7 +24,6 @@ def contacts(request):
     context = {
         'title': title,
         'address_list': address_list,
-        'basket': get_basket(request.user),
     }
 
     return render(request, 'geekshop/contact.html', context)
