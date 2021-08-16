@@ -78,8 +78,8 @@ class UserCreateView(LoginRequiredMixin, CreateView):
     form_class = ShopUserRegisterForm
     success_url = reverse_lazy('admin_staff:users')
 
-    def get_context_data(self):
-        context = super(UserCreateView, self).get_context_data()
+    def get_context_data(self, **kwargs):
+        context = super(UserCreateView, self).get_context_data(**kwargs)
         title = 'пользователи/создание'
         context.update({'title': title})
 
