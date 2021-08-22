@@ -35,11 +35,13 @@ def products(request, pk=None, page=1):
 
     hot_product = get_hot_product()
     same_products = get_same_products(hot_product)
+    products = Product.objects.all().order_by('price')
 
     if pk is not None:
         if pk == 0:
-            products = Product.objects.all().order_by('price')
-            category = {'name': 'все'}
+            products = Product.objects.filter(is_active=True).order_by('price')
+            category = {'pk': 0, 'name': 'все'}
+
         else:
             category = get_object_or_404(ProductCategory, pk=pk)
             products = Product.objects.filter(category__pk=pk).order_by('price')
@@ -56,6 +58,7 @@ def products(request, pk=None, page=1):
         context = {
             'title': title,
             'links_menu': links_menu,
+            'same_products': same_products,
             'category': category,
             'related_products': same_products,
             'products': products_paginator,
@@ -70,6 +73,7 @@ def products(request, pk=None, page=1):
         'links_menu': links_menu,
         'related_products': same_products,
         'hot_product': hot_product,
+        'same_products': same_products,
         'products': products,
     }
     return render(request, 'mainapp/products.html', context)
