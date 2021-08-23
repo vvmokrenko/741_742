@@ -30,7 +30,8 @@ urlpatterns = [
     path('contacts/', contacts, name='contacts'),
     path('', include('social_django.urls', namespace='social')),
    # path('', include('allauth.urls')),
-   #  url(r'', include('social_auth.urls')),
+   #  url(r'', include('social_auth.urls')),    
+    path('order/', include('ordersapp.urls', namespace='order'), name='order'),
 ]
 
 if settings.DEBUG:
