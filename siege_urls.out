@@ -1,0 +1,16 @@
+(env) root@194-67-87-141:/home/741_742# siege -f siege_urls.txt -d1 -r29 -c1
+** SIEGE 4.0.4
+** Preparing 1 concurrent users for battle.
+The server is now under siege...
+Transactions:                    154 hits
+Availability:                 100.00 %
+Elapsed time:                  15.19 secs
+Data transferred:               1.61 MB
+Response time:                  0.01 secs
+Transaction rate:              10.14 trans/sec
+Throughput:                     0.11 MB/sec
+Concurrency:                    0.14
+Successful transactions:         137
+Failed transactions:               0
+Longest transaction:            0.07
+Shortest transaction:           0.00

@@ -1,0 +1,10 @@
+194.67.87.141/basket/
+194.67.87.141/contacts/
+194.67.87.141/order/
+194.67.87.141/order/update/1/
+194.67.87.141/order/update/2/
+194.67.87.141/order/update/3/
+194.67.87.141/products/
+194.67.87.141/products/category/1/
+194.67.87.141/products/category/2/
+194.67.87.141/products/product/3/
