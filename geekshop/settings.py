@@ -202,9 +202,11 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "geekshop", "static"),
+    os.path.join(BASE_DIR, "basketapp", "static"),
 )
 
 STATICFILES_FINDERS = [
@@ -254,3 +256,19 @@ SOCIAL_AUTH_GITHUB_OAUTH2_SECRET = env('SOCIAL_AUTH_GITHUB_OAUTH2_SECRET')
 
 GITHUB_API_ID = env('GITHUB_API_ID')
 GITHUB_API_SECRET = env('GITHUB_API_SECRET')
+
+
+
+if os.name == 'posix':
+   CACHE_MIDDLEWARE_ALIAS = 'default'
+   CACHE_MIDDLEWARE_SECONDS = 60
+   CACHE_MIDDLEWARE_KEY_PREFIX = 'geekshop'
+
+   CACHES = {
+       'default': {
+           'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+           'LOCATION': '127.0.0.1:11211',
+       }
+   }
+
+LOW_CACHE = True
