@@ -14,7 +14,7 @@ from basketapp.models import Basket
 from .forms import OrderForm, OrderItemForm
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from django.db.models import F, Q
 
 class OrderList(LoginRequiredMixin, ListView):
     model = Order
@@ -138,16 +138,19 @@ def order_forming_complete(request, pk):
 def product_quantity_update_save(sender, update_fields, instance, **kwargs):
     if update_fields == 'quantity' 'product':
         if instance.pk:
-            instance.product.quantity -= instance.quantity.sender.get_item(instance.pk).quantity
+            # instance.product.quantity -= instance.quantity.sender.get_item(instance.pk).quantity
+            instance.product.quantity -= F('quantity')
         else:
-            instance.product.quantity -= instance.quantity
+            # instance.product.quantity -= instance.quantity
+            instance.product.quantity -= F('quantity')
         instance.save()
 
 
 @receiver(pre_save, sender=OrderItem)
 @receiver(pre_save, sender=Basket)
 def product_quantity_update_delete(sender, instance, **kwargs):
-    instance.product.quantity += instance.quantity
+    # instance.product.quantity += instance.quantity
+    instance.product.quantity += F('quantity')
     instance.product.save()
 
 

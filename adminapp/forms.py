@@ -2,15 +2,19 @@ from django import forms
 from mainapp.models import ProductCategory, Product
 
 class ProductCategoryEditForm(forms.ModelForm):
+    discount = forms.IntegerField(label='СЃРєРёРґРєР°', required=False, min_value=0, max_value=90, initial=0)
+
     class Meta:
         model = ProductCategory
-        fields = '__all__'
+        # fields = '__all__'
+        exclude = ()
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(ProductCategoryEditForm, self).__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-            field.help_text = ''
+            field.widget.attrs['class'] = ''
+
+
 
 class ProductEditForm(forms.ModelForm):
     class Meta:
@@ -24,3 +28,4 @@ class ProductEditForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
             field.help_text = ''
+

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+from typing import List
+
 from django.urls import reverse_lazy
 
 import environ
@@ -65,6 +67,9 @@ INSTALLED_APPS = [
 
 
 if DEBUG:
+
+    INTERNAL_IPS = ['127.0.0.1', ]
+
     def show_toolbar(request):
         return True
 
@@ -272,3 +277,4 @@ if os.name == 'posix':
    }
 
 LOW_CACHE = True
+
