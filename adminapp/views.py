@@ -8,20 +8,14 @@ from mainapp.models import ProductCategory, Product
 from django.contrib.auth.decorators import user_passes_test
 from adminapp.forms import ProductEditForm, ProductCategoryEditForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import DeleteView, UpdateView
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.db import connection
+from django.db.models import F, Q
 
-# def users(request):
-#     title = 'админка/пользователи'
-#
-#     users_list = ShopUser.objects.all().order_by('-is_active', '-is_superuser', '-is_staff', 'username')
-#
-#     context = {
-#         'title': title,
-#         'objects': users_list
-#     }
-#
-#     return render(request, 'adminapp/users.html', context)
 
 def users(request, page=1):
     title = 'админка/пользователи'
@@ -43,6 +37,20 @@ def users(request, page=1):
     }
 
     return render(request, 'adminapp/users.html', context)
+
+# def users(request):
+#     title = 'админка/пользователи'
+#
+#     users_list = ShopUser.objects.all().order_by('-is_active', '-is_superuser', '-is_staff', 'username')
+#
+#     context = {
+#         'title': title,
+#         'objects': users_list
+#     }
+#
+#     return render(request, 'adminapp/users.html', context)
+
+
 
 
 class UserListView(LoginRequiredMixin, ListView):
@@ -265,13 +273,21 @@ class ProductCategoryUpdateView(UpdateView):
     model = ProductCategory
     template_name = 'adminapp/category_update.html'
     success_url = reverse_lazy('admin_staff:categories')
-    fields = '__all__'
+    form_class = ProductCategoryEditForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'категории/редактирование'
-
         return context
+
+    def form_valid(self, form):
+        if 'discount' in form.cleaned_data:
+            discount = form.cleaned_data['discount']
+            if discount:
+                self.object.product_set.update(price=F('price') * (1 - discount / 100))
+                db_profile_by_type(self.__class__, 'UPDATE', connection.queries)
+
+        return super().form_valid(form)
 
 
 def category_delete(request, pk):
@@ -295,6 +311,22 @@ class ProductCategoryDeleteView(DeleteView):
     # переопределяем метод, чтобы не запрашивалась форма подтверждения удаления
     def get(self, *args, **kwargs):
         return self.post(*args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.is_active = False
+        self.object.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+class ProductCategoryDelete(DeleteView):
+
+    """Контроллер для удаления категорий
+    метод: delete - переопределен дабы не удалять из системы объекты, а просто их делать не активными.
+    """
+    model = ProductCategory
+    template_name = 'adminapp/productcategory_confirm_delete.html'
+    success_url = reverse_lazy('admin_staff:users')
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -391,15 +423,31 @@ def product_update(request, pk):
 
 @user_passes_test(lambda u: u.is_superuser)
 def product_delete(request, pk):
-    title = 'продукт/удаление'
+
 
     product = get_object_or_404(Product, pk=pk)
 
-    if product.is_active:
-        product.is_active = False
-    else:
-        product.is_active = True
+    if request.method == 'GET':
+        product.is_active = False if product.is_active else True
 
-    product.save()
-    return HttpResponseRedirect(reverse('admin_staff:products', \
-                                            args=[product.category.pk]))
+
+
+        product.save()
+        return HttpResponseRedirect(reverse('adminapp:products', args=[product.category.pk]))
+
+
+def db_profile_by_type(prefix, type, queries):
+    update_queries = list(filter(lambda x: type in x['sql'], queries))
+    print(f'db_profile {type} for {prefix}:')
+    [print(query['sql']) for query in update_queries]
+
+
+@receiver(pre_save, sender=ProductCategory)
+def product_is_active_update_productcategory_save(sender, instance, **kwargs):
+    if instance.pk:
+        if instance.is_active:
+            instance.product_set.update(is_active=True)
+        else:
+            instance.product_set.update(is_active=False)
+
+        db_profile_by_type(sender, 'UPDATE', connection.queries)

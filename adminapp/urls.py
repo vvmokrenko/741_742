@@ -19,7 +19,8 @@ from adminapp.views import (
     ProductCategoryCreateView,
     ProductCategoryUpdateView,
     ProductCategoryDeleteView,
-    ProductCategoryListView
+    ProductCategoryListView,
+    ProductCategoryDelete,
 )
 
 app_name = 'adminapp'
@@ -37,11 +38,13 @@ urlpatterns = [
     path('categories/create/', ProductCategoryCreateView.as_view(), name='category_create'),
     # рабочий path('categories/read/', categories, name='categories'),
     path('categories/read/', ProductCategoryListView.as_view(), name='categories'),
+
     path('categories/read/page/<int:page>/', categories, name='categories_page'),
     # path('categories/update/<int:pk>/', category_update, name='category_update'),
     path('categories/update/<int:pk>/', ProductCategoryUpdateView.as_view(), name='category_update'),
     # path('categories/delete/<int:pk>/', category_delete, name='category_delete'),
-    path('categories/delete/<int:pk>/', ProductCategoryDeleteView.as_view(), name='category_delete'),
+    # path('categories/delete/<int:pk>/', ProductCategoryDeleteView.as_view(), name='category_delete'),
+    path('categories/delete/<int:pk>/', ProductCategoryDelete.as_view(), name='category_delete'),
 
     path('products/create/category/<int:pk>/', product_create, name='product_create'),
     path('products/read/category/<int:pk>/', products, name='products'),
